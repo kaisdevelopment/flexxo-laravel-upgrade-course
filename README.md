@@ -15,19 +15,20 @@
 | **Framework**     | Laravel 11.x                                 |
 | **PHP**           | 8.2+                                         |
 | **Banco**         | SQLite (dev) / MySQL (produção)              |
+| **Status**        | ✅ **CONCLUÍDO**                              |
 
 ---
 
 ## 🗺️ Visão Geral das Aulas
 
 ```
-AULA 1                    AULA 2                      AULA 3
+AULA 1 ✅                 AULA 2 ✅                   AULA 3 ✅
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Fundamentos Laravel       Dados & Simulação           API & Dashboard
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Instalação              • Migrations                • Routes & Controllers
+• Instalação              • Migrations                • Form Requests
 • Estrutura MVC           • Models & Relations        • API Resources (JSON)
-• Artisan básico          • Seeders & Factories       • Form Requests
+• Artisan básico          • Seeders & Factories       • Resource Controllers
 • Configuração .env       • Comando Artisan Custom    • Dashboard Blade
                           • Simulação de Pulsos       • Filtros & Queries
                           • Progress Bar + Resumo     • Revisão & Boas Práticas
@@ -78,7 +79,7 @@ Pulso    ──belongsTo──▶ Maquina
 
 ---
 
-## ✅ Aula 1 — Fundamentos Laravel (Concluída)
+## ✅ Aula 1 — Fundamentos Laravel
 
 ### 🎯 Objetivo
 
@@ -93,20 +94,35 @@ Pulso    ──belongsTo──▶ Maquina
 - [x] Conceito de rotas, controllers e views
 - [x] Entendimento do ciclo de vida de uma request no Laravel
 
-### Conceitos-chave abordados
+### Conceitos-chave
 
 | Conceito           | Descrição                                                         |
 |--------------------|-------------------------------------------------------------------|
 | **MVC**            | Model-View-Controller — separação de responsabilidades            |
 | **Artisan**        | CLI nativo do Laravel para automação de tarefas                   |
 | **Composer**       | Gerenciador de dependências PHP                                   |
-| **`.env`**        | Arquivo de variáveis de ambiente (nunca comitar!)                 |
+| **`.env`**       | Arquivo de variáveis de ambiente (nunca comitar!)                 |
 | **Service Container** | Motor de injeção de dependências do Laravel                    |
 | **Routes**         | Mapeamento URL → Controller → Response                            |
 
+### 🔧 Analogia Industrial — Aula 1
+
+```
+┌─────────────────────────────────────────────────────┐
+│                CHÃO DE FÁBRICA                      │
+│                                                     │
+│  Composer    = Almoxarifado (fornece as peças)      │
+│  Laravel     = Máquina principal (framework)        │
+│  Artisan     = Painel de controle do operador       │
+│  .env        = Chave do quadro elétrico             │
+│  MVC         = Separar quem opera, processa, exibe  │
+│  Routes      = Esteira → direciona cada peça        │
+└─────────────────────────────────────────────────────┘
+```
+
 ---
 
-## ✅ Aula 2 — Dados & Simulação (Concluída)
+## ✅ Aula 2 — Dados & Simulação
 
 ### 🎯 Objetivo
 
@@ -124,38 +140,18 @@ Pulso    ──belongsTo──▶ Maquina
 - [x] Log colorido por porta/sensor
 - [x] Tabela de resumo final com métricas agregadas
 
----
-
-### 📦 Bloco 1 — Migrations
-
-#### Conceito
-
-> Migrations são o **controle de versão do banco de dados**. Cada migration é um arquivo PHP que descreve uma alteração na estrutura do banco. Permite que qualquer dev da equipe reproduza o banco exato com um único comando.
-
-#### Comandos utilizados
-
-```bash
-php artisan make:migration create_maquinas_table
-php artisan make:migration create_sensores_table
-php artisan make:migration create_pulsos_table
-php artisan migrate
-php artisan migrate:fresh --seed   # Rebuild completo
-```
-
-#### Migration: `create_maquinas_table`
+### Migrations
 
 ```php
+// create_maquinas_table
 Schema::create('maquinas', function (Blueprint $table) {
     $table->id();
     $table->string('nome');
     $table->string('setor');
     $table->timestamps();
 });
-```
 
-#### Migration: `create_sensores_table`
-
-```php
+// create_sensores_table
 Schema::create('sensores', function (Blueprint $table) {
     $table->id();
     $table->foreignId('maquina_id')->constrained('maquinas')->onDelete('cascade');
@@ -163,11 +159,8 @@ Schema::create('sensores', function (Blueprint $table) {
     $table->string('porta');
     $table->timestamps();
 });
-```
 
-#### Migration: `create_pulsos_table`
-
-```php
+// create_pulsos_table
 Schema::create('pulsos', function (Blueprint $table) {
     $table->id();
     $table->foreignId('maquina_id')->constrained('maquinas')->onDelete('cascade');
@@ -178,487 +171,399 @@ Schema::create('pulsos', function (Blueprint $table) {
 });
 ```
 
-#### Analogia
-
-> **Migration = planta baixa de um prédio.** Você descreve exatamente o que cada andar (tabela) vai ter. Se precisar reformar, cria uma nova migration — nunca edita a planta original.
-
----
-
-### 📦 Bloco 2 — Models & Relacionamentos Eloquent
-
-#### Conceito
-
-> O Eloquent é o ORM do Laravel. Cada Model representa uma tabela do banco. Os relacionamentos (`hasOne`, `hasMany`, `belongsTo`) permitem navegar entre tabelas de forma fluente, sem escrever SQL manual.
-
-#### Model: `Maquina`
+### Models
 
 ```php
-// app/Models/Maquina.php
-class Maquina extends Model
-{
+// Maquina.php
+class Maquina extends Model {
     use HasFactory;
-
     protected $fillable = ['nome', 'setor'];
 
-    public function sensor()
-    {
-        return $this->hasOne(Sensor::class);
-    }
-
-    public function pulsos()
-    {
-        return $this->hasMany(Pulso::class);
-    }
+    public function sensor()  { return $this->hasOne(Sensor::class); }
+    public function pulsos()  { return $this->hasMany(Pulso::class); }
 }
-```
 
-#### Model: `Sensor`
-
-```php
-// app/Models/Sensor.php
-class Sensor extends Model
-{
+// Sensor.php
+class Sensor extends Model {
     use HasFactory;
-
     protected $table = 'sensores';
     protected $fillable = ['maquina_id', 'identificador', 'porta'];
 
-    public function maquina()
-    {
-        return $this->belongsTo(Maquina::class);
-    }
+    public function maquina() { return $this->belongsTo(Maquina::class); }
 }
-```
 
-#### Model: `Pulso`
-
-```php
-// app/Models/Pulso.php
-class Pulso extends Model
-{
+// Pulso.php
+class Pulso extends Model {
     use HasFactory;
-
     protected $fillable = ['maquina_id', 'voltagem', 'ruido', 'registrado_em'];
-
     protected $casts = [
-        'voltagem'      => 'decimal:2',
-        'ruido'         => 'decimal:2',
+        'voltagem' => 'decimal:2',
+        'ruido' => 'decimal:2',
         'registrado_em' => 'datetime',
     ];
 
-    public function maquina()
-    {
-        return $this->belongsTo(Maquina::class);
-    }
+    public function maquina() { return $this->belongsTo(Maquina::class); }
 }
 ```
 
-#### Mapa de relacionamentos
-
-```
-┌──────────┐    hasOne     ┌──────────┐
-│ Maquina  │──────────────▶│  Sensor  │
-│          │               │          │
-│          │◀──────────────│belongsTo │
-│          │    hasMany    ┌──────────┐
-│          │──────────────▶│  Pulso   │
-│          │               │          │
-│          │◀──────────────│belongsTo │
-└──────────┘               └──────────┘
-```
-
-#### Analogia
-
-> **Model = ficha de cadastro inteligente.** Ao invés de ir no arquivo morto (banco) e procurar manualmente, você pergunta pro Model: *"Me traga todos os pulsos desta máquina"* — e ele faz o SQL pra você.
-
----
-
-### 📦 Bloco 3 — Seeders
-
-#### Conceito
-
-> Seeders populam o banco com dados iniciais. Ideal para dados fixos (máquinas do chão de fábrica) e para testes.
-
-#### Comando
-
-```bash
-php artisan make:seeder MaquinaSeeder
-php artisan db:seed
-```
-
-#### Seeder: `MaquinaSeeder`
+### Seeder
 
 ```php
-// database/seeders/MaquinaSeeder.php
-class MaquinaSeeder extends Seeder
-{
-    public function run(): void
-    {
-        $maquinas = [
-            ['nome' => 'Encartuchadeira L1',   'setor' => 'Linha 1'],
-            ['nome' => 'Blistadeira L1',       'setor' => 'Linha 1'],
-            ['nome' => 'Encartuchadeira L2',   'setor' => 'Linha 2'],
-            ['nome' => 'Rotuladeira L2',       'setor' => 'Linha 2'],
-            ['nome' => 'Torno CNC',            'setor' => 'Usinagem'],
-            ['nome' => 'Prensa Hidráulica',    'setor' => 'Estamparia'],
-            ['nome' => 'Injetora Plástica',    'setor' => 'Injeção'],
-            ['nome' => 'Compressor Central',   'setor' => 'Utilidades'],
-        ];
-
-        foreach ($maquinas as $m) {
-            $maquina = Maquina::create($m);
-
-            Sensor::create([
-                'maquina_id'    => $maquina->id,
-                'identificador' => 'SNS-' . str_pad($maquina->id, 3, '0', STR_PAD_LEFT),
-                'porta'         => '/dev/ttyUSB' . ($maquina->id - 1),
-            ]);
-        }
-    }
-}
+// MaquinaSeeder.php — 8 máquinas industriais + sensor automático
+$maquinas = [
+    ['nome' => 'Encartuchadeira L1',   'setor' => 'Linha 1'],
+    ['nome' => 'Blistadeira L1',       'setor' => 'Linha 1'],
+    ['nome' => 'Encartuchadeira L2',   'setor' => 'Linha 2'],
+    ['nome' => 'Rotuladeira L2',       'setor' => 'Linha 2'],
+    ['nome' => 'Torno CNC',            'setor' => 'Usinagem'],
+    ['nome' => 'Prensa Hidráulica',    'setor' => 'Estamparia'],
+    ['nome' => 'Injetora Plástica',    'setor' => 'Injeção'],
+    ['nome' => 'Compressor Central',   'setor' => 'Utilidades'],
+];
 ```
 
-#### DatabaseSeeder
-
-```php
-// database/seeders/DatabaseSeeder.php
-class DatabaseSeeder extends Seeder
-{
-    public function run(): void
-    {
-        $this->call([
-            MaquinaSeeder::class,
-        ]);
-    }
-}
-```
-
-#### Analogia
-
-> **Seeder = cadastro inicial do sistema.** É como o técnico que, antes de ligar a fábrica, registra todas as máquinas no sistema supervisório.
-
----
-
-### 📦 Bloco 4 — Factories
-
-#### Conceito
-
-> Factories geram dados falsos (mas realistas) automaticamente. Usam a lib Faker. Essenciais para testes e carga de dados.
-
-#### Comando
-
-```bash
-php artisan make:factory PulsoFactory --model=Pulso
-```
-
-#### Factory: `PulsoFactory`
-
-```php
-// database/factories/PulsoFactory.php
-class PulsoFactory extends Factory
-{
-    protected $model = Pulso::class;
-
-    public function definition(): array
-    {
-        return [
-            'maquina_id'    => Maquina::inRandomOrder()->first()->id,
-            'voltagem'      => fake()->randomFloat(2, 24, 220),
-            'ruido'         => fake()->randomFloat(2, 0, 100),
-            'registrado_em' => now(),
-        ];
-    }
-}
-```
-
-#### Analogia
-
-> **Factory = gerador de amostras.** Como um simulador que cria leituras fictícias mas dentro dos parâmetros reais da operação.
-
----
-
-### 📦 Bloco 5 — Comando Artisan Customizado
-
-#### Conceito
-
-> O Artisan permite criar comandos CLI personalizados. Aqui criamos o `simular:pulsos`, que gera leituras de sensores como se fossem dados chegando de dispositivos reais.
-
-#### Comando de criação
-
-```bash
-php artisan make:command SimularPulsos
-```
-
-#### Código completo: `SimularPulsos.php`
-
-```php
-// app/Console/Commands/SimularPulsos.php
-namespace App\Console\Commands;
-
-use App\Models\Maquina;
-use App\Models\Pulso;
-use Illuminate\Console\Command;
-
-class SimularPulsos extends Command
-{
-    protected $signature = 'simular:pulsos
-        {--quantidade=10 : Quantidade de pulsos a gerar}
-        {--intervalo=2 : Intervalo em segundos entre pulsos}';
-
-    protected $description = 'Simula pulsos de sensores industriais';
-
-    public function handle()
-    {
-        $quantidade = (int) $this->option('quantidade');
-        $intervalo  = (int) $this->option('intervalo');
-        $maquinas   = Maquina::with('sensor')->get();
-
-        if ($maquinas->isEmpty()) {
-            $this->error('Nenhuma máquina cadastrada. Rode: php artisan db:seed');
-            return 1;
-        }
-
-        $this->info('');
-        $this->info('🏭 Simulando pulsos industriais...');
-        $this->info('');
-
-        $bar = $this->output->createProgressBar($quantidade);
-        $bar->setFormat(' %current%/%max% [%bar%] %percent:3s%% ⏱  %elapsed%');
-        $bar->start();
-
-        for ($i = 0; $i < $quantidade; $i++) {
-            $maquina  = $maquinas->random();
-            $voltagem = round(mt_rand(2400, 22000) / 100, 2);
-            $ruido    = round(mt_rand(0, 10000) / 100, 2);
-
-            Pulso::create([
-                'maquina_id'    => $maquina->id,
-                'voltagem'      => $voltagem,
-                'ruido'         => $ruido,
-                'registrado_em' => now(),
-            ]);
-
-            $porta = $maquina->sensor->porta ?? 'N/A';
-            $bar->advance();
-
-            if ($intervalo > 0 && $i < $quantidade - 1) {
-                sleep($intervalo);
-            }
-        }
-
-        $bar->finish();
-        $this->newLine(2);
-
-        // ── Resumo do dia ──
-        $this->info('✅ Simulação concluída! Resumo do dia:');
-        $this->newLine();
-
-        $resumo = Maquina::with(['sensor', 'pulsos' => function ($q) {
-            $q->whereDate('created_at', today());
-        }])->get();
-
-        $rows = $resumo->map(function ($m) {
-            return [
-                $m->nome,
-                $m->sensor->identificador ?? '–',
-                $m->pulsos->count(),
-                round($m->pulsos->avg('voltagem'), 2) . ' V',
-                round($m->pulsos->avg('ruido'), 2) . ' dB',
-            ];
-        });
-
-        $this->table(
-            ['Máquina', 'Sensor', 'Pulsos Hoje', 'Voltagem Média', 'Ruído Médio'],
-            $rows
-        );
-
-        return 0;
-    }
-}
-```
-
-#### Como usar
+### Comando Artisan: `simular:pulsos`
 
 ```bash
 # Padrão: 10 pulsos, 2s de intervalo
 php artisan simular:pulsos
 
-# Customizado: 20 pulsos, 1s de intervalo
-php artisan simular:pulsos --quantidade=20 --intervalo=1
-
-# Rajada rápida: 50 pulsos, sem intervalo
+# Customizado
 php artisan simular:pulsos --quantidade=50 --intervalo=0
 ```
 
-#### Saída esperada
+Saída com progress bar + tabela de resumo com métricas por máquina.
+
+### 🔧 Analogia Industrial — Aula 2
 
 ```
-🏭 Simulando pulsos industriais...
-
- 20/20 [████████████████████████████████████████] 100% ⏱  0:22
-
-✅ Simulação concluída! Resumo do dia:
-
-┌──────────────────────┬─────────────┬─────────────┬────────────────┬─────────────┐
-│ Máquina              │ Sensor      │ Pulsos Hoje │ Voltagem Média │ Ruído Médio │
-├──────────────────────┼─────────────┼─────────────┼────────────────┼─────────────┤
-│ Encartuchadeira L1   │ SNS-001     │ 3           │ 152.51 V       │ 28.03 dB    │
-│ Blistadeira L1       │ SNS-002     │ 1           │ 213.55 V       │ 75.17 dB    │
-│ Encartuchadeira L2   │ SNS-003     │ 3           │ 160.67 V       │ 51.02 dB    │
-│ Rotuladeira L2       │ SNS-004     │ 6           │ 145.06 V       │ 24.66 dB    │
-│ Torno CNC            │ SNS-005     │ 4           │ 123.85 V       │ 19.61 dB    │
-│ Prensa Hidráulica    │ SNS-006     │ 2           │ 198.30 V       │ 62.44 dB    │
-│ Injetora Plástica    │ SNS-007     │ 1           │ 176.20 V       │ 45.80 dB    │
-│ Compressor Central   │ SNS-008     │ 0           │ 0.00 V         │ 0.00 dB     │
-└──────────────────────┴─────────────┴─────────────┴────────────────┴─────────────┘
-```
-
-#### Analogia
-
-> **Comando Artisan custom = macro no CLP.** Você programa uma rotina automática que roda sob demanda, sem precisar abrir o sistema inteiro.
-
----
-
-### 📁 Arquivos criados/modificados na Aula 2
-
-```
-app/
-├── Console/Commands/
-│   └── SimularPulsos.php
-├── Models/
-│   ├── Maquina.php
-│   ├── Sensor.php
-│   └── Pulso.php
-database/
-├── factories/
-│   ├── MaquinaFactory.php
-│   ├── SensorFactory.php
-│   └── PulsoFactory.php
-├── migrations/
-│   ├── xxxx_create_maquinas_table.php
-│   ├── xxxx_create_sensores_table.php
-│   └── xxxx_create_pulsos_table.php
-└── seeders/
-    ├── DatabaseSeeder.php
-    └── MaquinaSeeder.php
+┌─────────────────────────────────────────────────────┐
+│                SUPERVISÓRIO                         │
+│                                                     │
+│  Migrations  = Planta baixa do prédio               │
+│  Eloquent    = Ficha de cadastro inteligente         │
+│  Seeders     = Cadastro inicial do supervisório      │
+│  Factories   = Gerador de amostras para teste        │
+│  Cmd Custom  = Macro no CLP (automatiza ação)        │
+│  hasMany     = Máquina tem vários pulsos             │
+│  belongsTo   = Cada pulso pertence a uma máquina     │
+└─────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🔜 Aula 3 — API REST & Dashboard Web (Próxima)
+## ✅ Aula 3 — API REST & Dashboard Web
 
 ### 🎯 Objetivo
 
-> Construir a camada de API REST e um Dashboard Web que consome os dados dos pulsos simulados, fechando o ciclo completo de uma aplicação Laravel profissional.
+> Construir a camada de API REST e um Dashboard Web, fechando o ciclo completo de uma aplicação Laravel profissional.
 
-### Cronograma (4h)
+### O que foi feito
 
-| Bloco | Tema                          | Duração |
-|-------|-------------------------------|---------|
-| 1     | Routes & Resource Controllers | 45 min  |
-| 2     | API Resources (JSON)          | 30 min  |
-| 3     | Validação com Form Request    | 30 min  |
-| 4     | Dashboard Web com Blade       | 45 min  |
-| 5     | Filtros e Queries Avançadas   | 30 min  |
-| 6     | Fechamento e Revisão          | 30 min  |
+- [x] Form Request com validação e mensagens PT-BR (`StorePulsoRequest`)
+- [x] API Resources para formatação JSON (`MaquinaResource`, `PulsoResource`)
+- [x] Resource Controllers para API (`MaquinaController`, `PulsoController`)
+- [x] Rotas API com `apiResource`
+- [x] Dashboard Web com Blade (tema dark industrial)
+- [x] Cards de resumo (máquinas, pulsos, última leitura, ativas)
+- [x] Filtro por setor via dropdown
+- [x] Status automático: 🟢 Ativa | 🔴 Inativa | 🟡 Alerta (ruído > 75 dB)
+- [x] Paginação nos endpoints da API
 
-### Entregas previstas
-
-- [ ] Rotas API (`/api/maquinas`, `/api/pulsos`)
-- [ ] `MaquinaController` e `PulsoController` (Resource)
-- [ ] `MaquinaResource` e `PulsoResource` (JSON formatado)
-- [ ] `StorePulsoRequest` (validação)
-- [ ] `DashboardController` + View Blade
-- [ ] Filtros por máquina, data, voltagem mínima
-- [ ] Paginação nos endpoints
-
-### Rotas planejadas
+### Rotas da API
 
 ```
-GET    /api/maquinas           → Lista todas as máquinas + métricas
-GET    /api/maquinas/{id}      → Detalhe de uma máquina
-GET    /api/pulsos             → Lista pulsos (com filtros)
+GET    /api/maquinas           → Lista máquinas + métricas agregadas
+GET    /api/maquinas/{id}      → Detalhe de uma máquina + últimos 50 pulsos
+GET    /api/pulsos             → Lista pulsos (filtros + paginação)
 POST   /api/pulsos             → Registra novo pulso (validado)
+GET    /api/pulsos/{id}        → Detalhe de um pulso
 GET    /dashboard              → Painel web de monitoramento
 ```
 
-### Código planejado (preview)
+### Filtros disponíveis na API
 
-#### Resource Controller
+```
+GET /api/maquinas?setor=Linha 1
+GET /api/maquinas?nome=CNC
+GET /api/pulsos?maquina_id=3
+GET /api/pulsos?data=2026-05-30
+GET /api/pulsos?voltagem_min=100
+GET /api/pulsos?voltagem_max=200
+GET /api/pulsos?ruido_min=80
+GET /api/pulsos?per_page=50
+```
+
+### Form Request — Validação
 
 ```php
-// MaquinaController
-public function index()
+// StorePulsoRequest.php
+class StorePulsoRequest extends FormRequest
 {
-    $maquinas = Maquina::with(['sensor', 'pulsos'])
-                       ->withCount('pulsos')
-                       ->get();
+    public function authorize(): bool
+    {
+        return true;
+    }
 
-    return MaquinaResource::collection($maquinas);
+    public function rules(): array
+    {
+        return [
+            'maquina_id'    => 'required|integer|exists:maquinas,id',
+            'voltagem'      => 'required|numeric|min:0|max:500',
+            'ruido'         => 'required|numeric|min:0|max:150',
+            'registrado_em' => 'nullable|date',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'maquina_id.required' => 'A máquina é obrigatória.',
+            'maquina_id.exists'   => 'Máquina não encontrada no cadastro.',
+            'voltagem.required'   => 'A voltagem é obrigatória.',
+            'voltagem.max'        => 'Voltagem máxima permitida: 500V.',
+            'ruido.required'      => 'O ruído é obrigatório.',
+            'ruido.max'           => 'Ruído máximo permitido: 150 dB.',
+        ];
+    }
 }
 ```
 
-#### API Resource
+### API Resources
 
 ```php
-// MaquinaResource
-public function toArray($request)
+// MaquinaResource.php
+class MaquinaResource extends JsonResource
 {
-    return [
-        'id'             => $this->id,
-        'nome'           => $this->nome,
-        'setor'          => $this->setor,
-        'sensor'         => $this->sensor?->identificador,
-        'total_pulsos'   => $this->pulsos_count,
-        'voltagem_media' => round($this->pulsos->avg('voltagem'), 2),
-        'ruido_medio'    => round($this->pulsos->avg('ruido'), 2),
-        'status'         => $this->pulsos->avg('voltagem') > 0 ? 'ativa' : 'inativa',
-    ];
+    public function toArray(Request $request): array
+    {
+        return [
+            'id'     => $this->id,
+            'nome'   => $this->nome,
+            'setor'  => $this->setor,
+            'sensor' => [
+                'identificador' => $this->sensor?->identificador,
+                'porta'         => $this->sensor?->porta,
+            ],
+            'metricas' => [
+                'total_pulsos'    => $this->pulsos_count ?? $this->pulsos->count(),
+                'voltagem_media'  => round($this->pulsos->avg('voltagem'), 2),
+                'ruido_medio'     => round($this->pulsos->avg('ruido'), 2),
+                'ultimo_registro' => $this->pulsos->sortByDesc('registrado_em')
+                                          ->first()?->registrado_em
+                                          ?->format('d/m/Y H:i:s'),
+            ],
+            'status' => $this->resolverStatus(),
+        ];
+    }
+
+    private function resolverStatus(): string
+    {
+        if ($this->pulsos->isEmpty()) return '🔴 Inativa';
+
+        $ultimoRuido = $this->pulsos->sortByDesc('registrado_em')
+                            ->first()?->ruido;
+
+        return $ultimoRuido > 75 ? '🟡 Alerta' : '🟢 Ativa';
+    }
+}
+
+// PulsoResource.php
+class PulsoResource extends JsonResource
+{
+    public function toArray(Request $request): array
+    {
+        return [
+            'id'             => $this->id,
+            'maquina'        => $this->maquina->nome,
+            'setor'          => $this->maquina->setor,
+            'voltagem'       => (float) $this->voltagem,
+            'ruido'          => (float) $this->ruido,
+            'registrado_em'  => $this->registrado_em->format('d/m/Y H:i:s'),
+        ];
+    }
 }
 ```
 
-#### Form Request
+### Resource Controllers
 
 ```php
-// StorePulsoRequest
-public function rules(): array
+// Api/MaquinaController.php
+class MaquinaController extends Controller
 {
-    return [
-        'maquina_id' => 'required|exists:maquinas,id',
-        'voltagem'   => 'required|numeric|min:0|max:500',
-        'ruido'      => 'required|numeric|min:0|max:150',
-    ];
+    public function index(Request $request)
+    {
+        $query = Maquina::with(['sensor', 'pulsos']);
+
+        if ($request->filled('setor')) {
+            $query->where('setor', $request->setor);
+        }
+
+        if ($request->filled('nome')) {
+            $query->where('nome', 'like', '%' . $request->nome . '%');
+        }
+
+        $maquinas = $query->withCount('pulsos')
+                          ->paginate($request->get('per_page', 15));
+
+        return MaquinaResource::collection($maquinas);
+    }
+
+    public function show(Maquina $maquina)
+    {
+        $maquina->load(['sensor', 'pulsos' => function ($q) {
+            $q->orderByDesc('registrado_em')->take(50);
+        }]);
+
+        return new MaquinaResource($maquina);
+    }
+}
+
+// Api/PulsoController.php
+class PulsoController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = Pulso::with('maquina');
+
+        if ($request->filled('maquina_id')) {
+            $query->where('maquina_id', $request->maquina_id);
+        }
+
+        if ($request->filled('data')) {
+            $query->whereDate('registrado_em', $request->data);
+        }
+
+        if ($request->filled('voltagem_min')) {
+            $query->where('voltagem', '>=', $request->voltagem_min);
+        }
+
+        if ($request->filled('voltagem_max')) {
+            $query->where('voltagem', '<=', $request->voltagem_max);
+        }
+
+        if ($request->filled('ruido_min')) {
+            $query->where('ruido', '>=', $request->ruido_min);
+        }
+
+        $pulsos = $query->orderByDesc('registrado_em')
+                        ->paginate($request->get('per_page', 15));
+
+        return PulsoResource::collection($pulsos);
+    }
+
+    public function store(StorePulsoRequest $request)
+    {
+        $pulso = Pulso::create($request->validated());
+        $pulso->load('maquina');
+
+        return (new PulsoResource($pulso))
+            ->response()
+            ->setStatusCode(201);
+    }
+
+    public function show(Pulso $pulso)
+    {
+        $pulso->load('maquina');
+        return new PulsoResource($pulso);
+    }
 }
 ```
 
-#### Dashboard Blade
+### Dashboard Controller
 
-```html
-<!-- Painel estilo industrial dark com tabela de monitoramento em tempo real -->
-<!-- Exibe: Máquina | Setor | Sensor | Pulsos Hoje | Voltagem Média | Ruído Médio | Status -->
+```php
+// DashboardController.php
+class DashboardController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = Maquina::with(['sensor', 'pulsos']);
+
+        if ($request->filled('setor')) {
+            $query->where('setor', $request->setor);
+        }
+
+        $maquinas = $query->get();
+
+        $setores = Maquina::select('setor')
+                          ->distinct()
+                          ->orderBy('setor')
+                          ->pluck('setor');
+
+        $totalMaquinas = $maquinas->count();
+
+        $totalPulsosHoje = Pulso::whereDate('registrado_em', today())->count();
+
+        $ultimoRegistro = Pulso::orderByDesc('registrado_em')
+                               ->first()
+                               ?->registrado_em
+                               ?->format('d/m/Y H:i:s') ?? '—';
+
+        $maquinasAtivas = $maquinas->filter(fn ($m) => $m->pulsos->isNotEmpty())->count();
+
+        return view('dashboard', compact(
+            'maquinas',
+            'setores',
+            'totalMaquinas',
+            'totalPulsosHoje',
+            'ultimoRegistro',
+            'maquinasAtivas'
+        ));
+    }
+}
 ```
 
-### Arquivos a serem criados
+### Rotas
+
+```php
+// routes/api.php
+use App\Http\Controllers\Api\MaquinaController;
+use App\Http\Controllers\Api\PulsoController;
+
+Route::apiResource('maquinas', MaquinaController::class)->only(['index', 'show']);
+Route::apiResource('pulsos', PulsoController::class)->only(['index', 'store', 'show']);
+
+// routes/web.php
+use App\Http\Controllers\DashboardController;
+
+Route::get('/dashboard', [DashboardController::class, 'index']);
+```
+
+### Dashboard Blade — Painel de Monitoramento
 
 ```
-app/
-├── Http/
-│   ├── Controllers/
-│   │   ├── Api/
-│   │   │   ├── MaquinaController.php
-│   │   │   └── PulsoController.php
-│   │   └── DashboardController.php
-│   ├── Requests/
-│   │   └── StorePulsoRequest.php
-│   └── Resources/
-│       ├── MaquinaResource.php
-│       └── PulsoResource.php
-resources/
-└── views/
-    └── dashboard.blade.php
-routes/
-├── api.php
-└── web.php (atualizado)
+┌──────────────────────────────────────────────────────────────┐
+│  🏭 SENSOR LEGACY — Painel de Monitoramento                 │
+├──────────────────────────────────────────────────────────────┤
+│  📊 Cards: Máquinas | Pulsos Hoje | Último Registro | Ativas│
+├──────────────────────────────────────────────────────────────┤
+│  🔽 Filtro por setor (dropdown)                              │
+├──────────────────────────────────────────────────────────────┤
+│  Máquina │ Setor │ Sensor │ Porta │ Pulsos │ V │ dB │ Status│
+│  ────────┼───────┼────────┼───────┼────────┼───┼────┼───────│
+│  Enc. L1 │ L1    │SNS-001 │USB0   │   23   │127│ 42 │ 🟢   │
+│  Torno   │ Usin. │SNS-005 │USB4   │    0   │ — │  — │ 🔴   │
+│  Prensa  │ Est.  │SNS-006 │USB5   │   15   │198│ 82 │ 🟡   │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### 🔧 Analogia Industrial — Aula 3
+
+```
+┌─────────────────────────────────────────────────────┐
+│                ENTREGA FINAL                        │
+│                                                     │
+│  Form Request   = Porteiro (valida antes de entrar) │
+│  API Resource   = Painel supervisório (formata)     │
+│  Controller     = Gerente (busca e entrega)         │
+│  Blade          = Formulário pré-impresso           │
+│  Rotas Web      = Tela do supervisório              │
+│  Rotas API      = Interface serial RS-485           │
+│  Filtros        = Seletor de linha no painel        │
+│  Paginação      = Lote de peças no carrossel        │
+│  Status 🟢🟡🔴  = Semáforo do CLP                   │
+└─────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -669,91 +574,157 @@ routes/
 
 - PHP 8.2+
 - Composer
-- Node.js (opcional, para assets)
 
 ### Instalação
 
 ```bash
-# Clonar o repositório
 git clone <url-do-repo>
 cd sensor-legacy
-
-# Instalar dependências
 composer install
-
-# Copiar .env
 cp .env.example .env
-
-# Gerar chave
 php artisan key:generate
-
-# Criar banco SQLite
 touch database/database.sqlite
-
-# Rodar migrations e seeders
 php artisan migrate --seed
 ```
 
 ### Executar
 
 ```bash
-# Subir o servidor
+# Terminal 1 — Servidor
 php artisan serve
 
-# Simular pulsos (em outro terminal)
-php artisan simular:pulsos --quantidade=50 --intervalo=1
+# Terminal 2 — Simular dados
+php artisan simular:pulsos --quantidade=50 --intervalo=0
 
 # Acessar
-# API:       http://localhost:8000/api/maquinas
 # Dashboard: http://localhost:8000/dashboard
+# API:       http://localhost:8000/api/maquinas
+#            http://localhost:8000/api/pulsos
+```
+
+### Testar a API
+
+```bash
+# GET — Listar máquinas
+curl -s http://localhost:8000/api/maquinas | python3 -m json.tool
+
+# GET — Filtrar por setor
+curl -s 'http://localhost:8000/api/maquinas?setor=Linha 1' | python3 -m json.tool
+
+# GET — Pulsos filtrados por máquina
+curl -s 'http://localhost:8000/api/pulsos?maquina_id=1' | python3 -m json.tool
+
+# GET — Pulsos com filtro de voltagem
+curl -s 'http://localhost:8000/api/pulsos?voltagem_min=100&voltagem_max=200' | python3 -m json.tool
+
+# POST — Criar pulso (válido)
+curl -s -X POST http://localhost:8000/api/pulsos \\
+  -H 'Content-Type: application/json' \\
+  -H 'Accept: application/json' \\
+  -d '{"maquina_id": 1, "voltagem": 127.5, "ruido": 42.3}' | python3 -m json.tool
+
+# POST — Criar pulso (inválido — testa validação)
+curl -s -X POST http://localhost:8000/api/pulsos \\
+  -H 'Content-Type: application/json' \\
+  -H 'Accept: application/json' \\
+  -d '{"maquina_id": 999, "voltagem": 600}' | python3 -m json.tool
+```
+
+---
+
+## 📁 Estrutura Final do Projeto
+
+```
+sensor-legacy/
+├── app/
+│   ├── Console/Commands/
+│   │   └── SimularPulsos.php          # Comando de simulação
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Api/
+│   │   │   │   ├── MaquinaController.php   # API: máquinas
+│   │   │   │   └── PulsoController.php     # API: pulsos
+│   │   │   └── DashboardController.php     # Web: dashboard
+│   │   ├── Requests/
+│   │   │   └── StorePulsoRequest.php       # Validação
+│   │   └── Resources/
+│   │       ├── MaquinaResource.php         # JSON: máquina
+│   │       └── PulsoResource.php           # JSON: pulso
+│   └── Models/
+│       ├── Maquina.php
+│       ├── Sensor.php
+│       └── Pulso.php
+├── database/
+│   ├── factories/
+│   │   └── PulsoFactory.php
+│   ├── migrations/
+│   │   ├── xxxx_create_maquinas_table.php
+│   │   ├── xxxx_create_sensores_table.php
+│   │   └── xxxx_create_pulsos_table.php
+│   └── seeders/
+│       ├── DatabaseSeeder.php
+│       └── MaquinaSeeder.php
+├── resources/views/
+│   └── dashboard.blade.php             # Painel web
+├── routes/
+│   ├── api.php                         # Rotas API REST
+│   └── web.php                         # Rota do dashboard
+└── README.md
 ```
 
 ---
 
 ## 🛠️ Tecnologias
 
-| Tecnologia      | Uso                              |
-|-----------------|----------------------------------|
-| **Laravel 11**  | Framework principal              |
-| **Eloquent**    | ORM (Models, Relations, Queries) |
-| **Artisan**     | CLI (Commands, Migrations, Seed) |
-| **Blade**       | Template engine (Dashboard)      |
-| **SQLite**      | Banco de dados (desenvolvimento) |
-| **JSON API**    | Comunicação REST                 |
+| Tecnologia          | Uso                                |
+|---------------------|------------------------------------|
+| **Laravel 11**      | Framework principal                |
+| **Eloquent ORM**    | Models, Relations, Query Builder   |
+| **Artisan CLI**     | Commands, Migrations, Seeders      |
+| **Blade**           | Template engine (Dashboard)        |
+| **API Resources**   | Formatação JSON                    |
+| **Form Requests**   | Validação server-side              |
+| **SQLite**          | Banco de dados (desenvolvimento)   |
 
 ---
 
-## 📁 Estrutura do Projeto (Visão Geral)
+## 🧠 Conceitos Aprendidos no Curso
 
-```
-sensor-legacy/
-├── app/
-│   ├── Console/Commands/        # Comando de simulação
-│   ├── Http/
-│   │   ├── Controllers/         # Controllers Web e API
-│   │   ├── Requests/            # Form Requests (validação)
-│   │   └── Resources/           # API Resources (JSON)
-│   └── Models/                  # Eloquent Models
-├── database/
-│   ├── factories/               # Factories para testes
-│   ├── migrations/              # Estrutura do banco
-│   └── seeders/                 # Dados iniciais
-├── resources/views/             # Views Blade (Dashboard)
-├── routes/
-│   ├── api.php                  # Rotas da API REST
-│   └── web.php                  # Rotas Web
-└── README.md                    # ← Você está aqui
-```
+| Aula | Conceito                | Analogia Industrial                               |
+|------|-------------------------|---------------------------------------------------|
+| 1    | MVC                     | Separar quem opera, quem processa, quem exibe      |
+| 1    | Artisan CLI             | Painel de controle do operador                     |
+| 1    | `.env`               | Chave do quadro elétrico (nunca compartilhar)      |
+| 2    | Migrations              | Planta baixa do prédio                             |
+| 2    | Eloquent ORM            | Ficha de cadastro inteligente                      |
+| 2    | Seeders                 | Cadastro inicial do supervisório                   |
+| 2    | Factories               | Gerador de amostras para teste                     |
+| 2    | Comando Artisan custom  | Macro no CLP                                       |
+| 3    | Form Request            | Porteiro da fábrica (valida antes de entrar)       |
+| 3    | API Resource            | Painel do supervisório (formata dados pro display) |
+| 3    | Resource Controller     | Gerente (busca dado e entrega pro painel)          |
+| 3    | Blade Template          | Formulário pré-impresso (HTML + dados variáveis)   |
+| 3    | Rotas Web vs API        | Tela do supervisório vs interface serial RS-485    |
+| 3    | Filtros (Query String)  | Seletor de linha no painel de controle             |
+| 3    | Paginação               | Lote de peças no carrossel de produção             |
+| 3    | Status 🟢🟡🔴           | Semáforo de status do CLP                          |
 
 ---
 
 ## 📝 Histórico de Commits
 
-| Aula | Commit sugerido                                            |
-|------|-----------------------------------------------------------|
-| 1    | `feat: scaffold inicial do projeto Laravel`                |
-| 2    | `feat: models, migrations, seeders e comando de simulação` |
-| 3    | `feat: API REST, resources, validação e dashboard web`     |
+| Aula | Commit                                                     |
+|------|------------------------------------------------------------|
+| 1    | `feat: scaffold inicial do projeto Laravel`              |
+| 2    | `feat: models, migrations, seeders e comando de simulação`|
+| 3    | `feat: API REST, resources, validação e dashboard web`   |
+| 3    | `docs: README final do curso completo`                   |
+
+---
+
+## 🎓 Certificação
+
+Curso concluído em **30/05/2026** na escola **Flexxo — Caxias do Sul/RS**.
 
 ---
 
